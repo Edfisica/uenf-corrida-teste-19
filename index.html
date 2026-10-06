@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0d4f91">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="UENF Corrida">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <title>UENF em Movimento | Treinamento de Corrida</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <div class="brand">
+        <div class="brand-mark"><img src="icons/icon-192.png" alt="Logo UENF Corrida"></div>
+        <div>
+          <div class="eyebrow">UENF EM MOVIMENTO</div>
+          <h1>Treinamento de Corrida</h1>
+        </div>
+      </div>
+      <p>Calculadora de VO₂máx, pace, velocidade e zonas de treinamento.</p>
+      <button id="btnComoFunciona" class="secondary" type="button">COMO FUNCIONA</button>
+    </header>
+
+
+    <section id="tutorial" class="card" hidden aria-labelledby="tutorialTitulo">
+      <h2 id="tutorialTitulo">Como Funciona</h2>
+      <div class="tutorial-card"><h3>🏃‍♂️ TESTE COOPER</h3><p>Corra a maior distância possível em 12 minutos e calcule seu VO₂ máximo. Ou informe seu VO₂ diretamente.</p></div>
+      <div class="tutorial-card"><h3>📊 ZONAS DE TREINO</h3><p>Veja as zonas de intensidade (Z1 a Z4) com cores, velocidade e pace para cada percentual do seu VO₂.</p></div>
+      <div class="tutorial-card"><h3>📅 MICROCICLO</h3><p>Plano semanal com treinos intervalados (1x1, 4x4), Fartlek, Limiar e treinos contínuos.</p></div>
+      <button id="btnFecharTutorial" type="button">COMEÇAR</button>
+    </section>
+
+    <section class="card">
+      <h2>1. Defina seu VO₂máx</h2>
+      <p>Escolha uma das opções abaixo:</p>
+
+      <div class="vo2-methods">
+        <label class="method-option">
+          <input type="radio" name="metodoVo2" value="cooper" checked>
+          <span>
+            <strong>Calcular pelo teste de Cooper</strong>
+            <small>Informe seus dados e a distância percorrida em 12 minutos.</small>
+          </span>
+        </label>
+
+        <label class="method-option">
+          <input type="radio" name="metodoVo2" value="direto">
+          <span>
+            <strong>Já sei meu VO₂máx</strong>
+            <small>Informe seus dados pessoais e o valor do seu VO₂máx.</small>
+          </span>
+        </label>
+      </div>
+
+      <div id="dadosCooper">
+        <div class="grid">
+          <label>
+            Nome
+            <input id="nome" type="text" placeholder="Seu nome">
+          </label>
+          <label>
+            Idade
+            <input id="idade" type="number" min="1" max="120" placeholder="Ex.: 35">
+          </label>
+          <label>
+            Sexo
+            <select id="sexo">
+              <option value="">Selecione</option>
+              <option value="masculino">Masculino</option>
+              <option value="feminino">Feminino</option>
+            </select>
+          </label>
+          <label>
+            Peso (kg)
+            <input id="peso" type="number" min="1" step="0.1" placeholder="Ex.: 70">
+          </label>
+          <label class="full">
+            Distância percorrida em 12 minutos (metros)
+            <input id="distancia" type="number" min="1" step="1" placeholder="Ex.: 2400">
+          </label>
+        </div>
+      </div>
+
+      <div id="dadosVo2Direto" class="vo2-direct hidden">
+        <label>
+          VO₂máx (ml/kg/min)
+          <input id="vo2Direto" type="number" min="10" max="100" step="0.1" placeholder="Ex.: 45,5">
+        </label>
+        <p>Esse valor será utilizado diretamente para calcular as zonas e os treinos.</p>
+      </div>
+
+      <button id="btnCalcular" type="button">DEFINIR VO₂MÁX</button>
+      <p id="erro" class="error" hidden></p>
+    </section>
+
+    <section id="resultado" hidden>
+      <div class="result-card">
+        <div>
+          <div class="eyebrow">RESULTADO</div>
+          <h2 id="saudacao">Seu resultado</h2>
+        </div>
+        <div class="vo2">
+          <span>VO₂máx</span>
+          <strong id="vo2Valor">0,0</strong>
+          <small>ml/kg/min</small>
+        </div>
+        <div class="classification">
+          <span>Classificação</span>
+          <strong id="classificacao">...</strong>
+        </div>
+        <div class="classification">
+          <span>Origem do VO₂máx</span>
+          <strong id="origemVo2">...</strong>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Zonas de treinamento</h2>
+        <p class="muted">Valores calculados a partir do VO₂máx obtido.</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Zona</th>
+                <th>% VO₂</th>
+                <th>Pace</th>
+                <th>Velocidade</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaZonas"></tbody>
+          </table>
+        </div>
+      </div>
+
+    <section id="microciclo" class="card">
+      <h2>Microciclo</h2>
+      <p class="muted">A proposta organiza a semana pela distribuição da intensidade, e não por dias fixos.</p>
+
+      <div class="micro-principle">
+        <div class="principle-main">
+          <strong>1 treino forte</strong>
+          <span>seguido por 3 treinos moderados</span>
+        </div>
+        <div class="principle-note">
+          A sequência pode ser distribuída conforme a rotina do atleta.
+        </div>
+      </div>
+
+      <div class="micro-sequence">
+        <div class="sequence-item strong">
+          <strong>FORTE</strong>
+          <span>Intervalado, Fartlek ou Limiar</span>
+        </div>
+        <div class="sequence-arrow">→</div>
+        <div class="sequence-item">
+          <strong>MODERADO</strong>
+          <span>Treino contínuo</span>
+        </div>
+        <div class="sequence-arrow">→</div>
+        <div class="sequence-item">
+          <strong>MODERADO</strong>
+          <span>Treino contínuo</span>
+        </div>
+        <div class="sequence-arrow">→</div>
+        <div class="sequence-item">
+          <strong>MODERADO</strong>
+          <span>Treino contínuo</span>
+        </div>
+      </div>
+    </section>
+
+      <div class="card stimulus-box">
+        <h2>Quantidade de estímulos no intervalado</h2>
+        <p class="muted">
+          O tempo total dos estímulos fortes corresponde a <strong>10% do volume total de treinamento semanal</strong>.
+        </p>
+
+        <div class="volume-inputs">
+          <label>
+            Volume semanal de treinamento (minutos)
+            <input id="minutosSemana" type="number" min="1" step="1" value="120">
+          </label>
+
+          <label>
+            Tipo de intervalado
+            <select id="tipoIntervalado">
+              <option value="1x1">1×1, estímulos de 1 min</option>
+              <option value="4x4">4×4, estímulos de 4 min</option>
+            </select>
+          </label>
+        </div>
+
+        <button id="btnCalcularEstimulos" class="volume-button">CALCULAR ESTÍMULOS</button>
+
+        <div id="estimuloResultado" class="volume-result" hidden>
+          <div class="training-metrics">
+            <div class="metric">
+              <span>Tempo forte</span>
+              <strong id="tempoEstimulo">0 min</strong>
+            </div>
+            <div class="metric">
+              <span>Estímulos</span>
+              <strong id="qtdEstimulos">0</strong>
+            </div>
+            <div class="metric">
+              <span>Volume semanal</span>
+              <strong id="tempoSemanal">0 min</strong>
+            </div>
+          </div>
+          <p id="estimuloObservacao" class="muted"></p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Acessar treinamentos</h2>
+        <p class="muted">Use seu VO₂máx calculado para iniciar os treinos.</p>
+        <button id="btnIrTreinos">VER TREINAMENTOS</button>
+      </div>
+
+      <div class="card">
+        <h2>Pace de referência</h2>
+        <div class="pace-grid">
+          <div class="metric">
+            <span>Velocidade</span>
+            <strong id="velocidadeReferencia">0,0 km/h</strong>
+          </div>
+          <div class="metric">
+            <span>Pace</span>
+            <strong id="paceReferencia">0:00 min/km</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="treinamentos" class="card">
+      <h2>Treinamentos</h2>
+      <p class="muted">Escolha o tipo de treino para ver, por escrito, toda a estrutura da sessão.</p>
+
+      <div class="training-buttons">
+        <button class="training-btn" data-treino="1x1">1×1</button>
+        <button class="training-btn" data-treino="4x4">4×4</button>
+        <button class="training-btn" data-treino="fartlek">Fartlek</button>
+        <button class="training-btn" data-treino="limiar">Limiar</button>
+        <button class="training-btn" data-treino="continuo">Contínuo</button>
+      </div>
+
+      <div id="treinoPainel" class="training-panel" hidden>
+        <div class="training-head">
+          <div>
+            <div class="eyebrow" id="treinoTitulo">TREINO</div>
+            <h2 id="treinoEtapa">Preparado</h2>
+          </div>
+          <div class="training-series">
+            <span>Série</span>
+            <strong id="treinoSerie">0 / 0</strong>
+          </div>
+        </div>
+
+        <div class="training-timer timer-aquecimento" id="treinoTempo">00:00</div>
+        <div class="training-total-time" id="treinoTempoTotal">Tempo total: 00:00</div>
+        <div class="screen-options">
+          <label class="screen-option"><input id="manterTelaLigada" type="checkbox"> Manter tela ligada</label>
+          <label class="screen-option"><input id="telaEscura" type="checkbox"> Escurecer tela</label>
+          <p class="muted">O funcionamento em segundo plano depende do navegador e das configurações do celular.</p>
+        </div>
+
+        <div class="training-metrics">
+          <div class="metric">
+            <span>Intensidade</span>
+            <strong id="treinoIntensidade">0%</strong>
+          </div>
+          <div class="metric">
+            <span>Velocidade</span>
+            <strong id="treinoVelocidade">0,0 km/h</strong>
+          </div>
+          <div class="metric">
+            <span>Pace</span>
+            <strong id="treinoPace">0:00 min/km</strong>
+          </div>
+        </div>
+
+        <div class="training-actions">
+          <button id="btnIniciarTreino">▶ INICIAR</button>
+          <button id="btnPausarTreino" class="secondary">⏸ PAUSAR</button>
+          <button id="btnEncerrarTreino" class="secondary">⏹ ENCERRAR</button>
+        </div>
+
+        <p id="treinoStatus" class="muted training-status"></p>
+      </div>
+
+
+    </section>
+
+    <section id="acompanhamento" class="card">
+      <h2>Acompanhamento</h2>
+      <p class="muted">Registre seus treinos e avaliações para acompanhar sua evolução ao longo do tempo. Os dados ficam salvos neste dispositivo.</p>
+
+      <div class="tracking-grid">
+        <div class="tracking-form">
+          <h3>Registrar treino realizado</h3>
+          <p class="muted">Selecione a data e o tipo de treino. A duração é preenchida automaticamente conforme a estrutura do treinamento.</p>
+          <div class="grid tracking-fields">
+            <label>
+              Data
+              <input id="registroData" type="date">
+            </label>
+            <label>
+              Tipo de treino
+              <select id="registroTipo">
+                <option value="1x1">1×1</option>
+                <option value="4x4">4×4</option>
+                <option value="fartlek">Fartlek</option>
+                <option value="limiar">Limiar</option>
+                <option value="continuo">Contínuo</option>
+              </select>
+            </label>
+            <label>
+              Duração prevista
+              <input id="registroDuracao" type="text" readonly>
+            </label>
+          </div>
+          <button id="btnRegistrarTreino">REGISTRAR TREINO</button>
+          <p id="registroMensagem" class="success-message" hidden></p>
+        </div>
+
+        <div class="tracking-form">
+          <h3>Registrar avaliação de VO₂máx</h3>
+          <p class="muted">Use este registro para comparar sua evolução ao longo das avaliações.</p>
+          <div class="grid tracking-fields">
+            <label>
+              Data
+              <input id="avaliacaoData" type="date">
+            </label>
+            <label>
+              VO₂máx (ml/kg/min)
+              <input id="avaliacaoVo2" type="number" min="10" max="100" step="0.1" placeholder="Ex.: 45,5">
+            </label>
+          </div>
+          <button id="btnRegistrarAvaliacao" class="secondary" type="button">REGISTRAR AVALIAÇÃO</button>
+          <p id="avaliacaoMensagem" class="success-message" hidden></p>
+        </div>
+      </div>
+
+      <div class="user-data-card">
+        <div>
+          <h3>Dados do usuário</h3>
+          <p class="muted">Os dados utilizados na avaliação ficam registrados neste dispositivo.</p>
+        </div>
+        <div class="user-data-grid">
+          <div><span>Nome</span><strong id="acompNome">--</strong></div>
+          <div><span>Idade</span><strong id="acompIdade">--</strong></div>
+          <div><span>Sexo</span><strong id="acompSexo">--</strong></div>
+          <div><span>Peso</span><strong id="acompPeso">--</strong></div>
+          <div><span>VO₂máx</span><strong id="acompVo2">--</strong></div>
+          <div><span>Origem</span><strong id="acompOrigem">--</strong></div>
+        </div>
+        <button id="btnLimparDadosUsuario" class="danger-button" type="button">LIMPAR DADOS DO USUÁRIO</button>
+      </div>
+
+      <div class="tracking-summary">
+        <div class="metric">
+          <span>Treinos registrados</span>
+          <strong id="totalTreinos">0</strong>
+        </div>
+        <div class="metric">
+          <span>Minutos treinados</span>
+          <strong id="totalMinutos">0 min</strong>
+        </div>
+        <div class="metric">
+          <span>Treinos fortes</span>
+          <strong id="totalFortes">0</strong>
+        </div>
+        <div class="metric">
+          <span>VO₂máx mais recente</span>
+          <strong id="vo2Recente">--</strong>
+        </div>
+      </div>
+
+      <div class="tracking-columns">
+        <div>
+          <h3>Histórico de treinos</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Data</th><th>Treino</th><th>Duração</th><th>% VO₂</th><th>Pace</th></tr>
+              </thead>
+              <tbody id="historicoTreinos"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <h3>Evolução do VO₂máx</h3>
+          <div id="evolucaoVo2" class="vo2-history"></div>
+        </div>
+      </div>
+
+      <button id="btnLimparAcompanhamento" class="danger-button" type="button">LIMPAR ACOMPANHAMENTO</button>
+    </section>
+
+
+
+    <footer>
+      UENF em Movimento • Versão Web em desenvolvimento
+    </footer>
+  </main>
+
+  <script src="script.js"></script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
